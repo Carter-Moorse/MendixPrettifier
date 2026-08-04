@@ -1,0 +1,12 @@
+{
+  "mendixComponent": {
+    "entryPoints": {
+      "main": "main.js"
+    },
+    "supportsHeadless": true,
+    "permissions": {
+      "runtime-configuration-private": false
+    }
+
+  }
+}

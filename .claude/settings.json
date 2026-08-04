@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/Mendix/**)",
+      "Read(//c/Program Files/Mendix/11.12.0/modeler/ide-client/ui-dependencies/**)",
+      "Bash(awk 'NR==8' react-dom.js)",
+      "Bash(cd \"c:/Widgets/New folder/AutoPrettifier\" && awk 'NR==8' \"/c/Program Files/Mendix/11.12.0/modeler/ide-client/ui-dependencies/react-dom.js\" | cut -c24380-24700)",
+      "Bash(P=\"/c/Mendix Projects/AuraQ/AgnosticToolingTestApp-dev-Stitch\"; ls \"$P\" | head -30; echo \"=== extensions ===\"; ls -la \"$P/extensions\" 2>&1 | head)",
+      "Read(//c/Mendix Projects/AuraQ/AgnosticToolingTestApp-dev-Stitch/**)"
+    ]
+  }
+}
