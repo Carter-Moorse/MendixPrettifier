@@ -1,15 +1,6 @@
 import { IComponent, getStudioProApi } from "@mendix/extensions-api";
-import { calculateFlowLayout } from "./layoutEngine";
+import { LayoutEngine } from "./layoutEngine";
 import { applyFlowLayout } from "./transaction";
-
-// Document types this extension can format. Microflows and nanoflows share the same
-// underlying structure (objectCollection + flows), so both use the same layout engine.
-const SUPPORTED_DOCUMENTS = {
-    "Microflows$Microflow": "microflow",
-    "Microflows$Nanoflow": "nanoflow"
-} as const;
-
-type FlowKind = (typeof SUPPORTED_DOCUMENTS)[keyof typeof SUPPORTED_DOCUMENTS];
 
 export const component: IComponent = {
     async loaded(componentContext) {
@@ -25,7 +16,6 @@ export const component: IComponent = {
             menuId: "myextension.FormatMicroflowMenu",
             caption: "Auto-Format Active Microflow / Nanoflow",
             action: async () => {
-                let kind: FlowKind = "microflow";
                 try {
                     // 4. Fetch the document currently open in the Studio Pro canvas
                     const activeDocument = await studioPro.ui.editors.getActiveDocument();
@@ -36,14 +26,13 @@ export const component: IComponent = {
                     }
 
                     // 5. Make sure the active document is a microflow or a nanoflow
-                    const documentType = activeDocument.documentType as keyof typeof SUPPORTED_DOCUMENTS;
-                    if (!(documentType in SUPPORTED_DOCUMENTS)) {
+                    if (!LayoutEngine.isSupported(activeDocument)) {
                         messageBoxApi.show("warning", "Please open a Microflow or Nanoflow to format it.");
                         return;
                     }
-                    kind = SUPPORTED_DOCUMENTS[documentType];
 
                     // 6. Use the App Model API to load the document by its ID
+                    const kind = LayoutEngine.getKind(activeDocument);
                     const targetId = activeDocument.documentId;
                     const modelApi = kind === "nanoflow"
                         ? studioPro.app.model.nanoflows
@@ -56,19 +45,15 @@ export const component: IComponent = {
                     }
 
                     const activeFlow = loadedDocuments[0];
-
-                    // 7. Extract objects and flows
-                    // Objects (activities/events) live in objectCollection; flows are a separate list
-                    const objects = activeFlow.objectCollection?.objects || [];
-                    const flows = activeFlow.flows || [];
+                    const layoutEngine = new LayoutEngine(activeFlow);
 
                     // 8. Calculate coordinates and apply them
-                    const newCoordinates = calculateFlowLayout(objects, flows);
+                    const newCoordinates = layoutEngine.calculateLayout();
                     await applyFlowLayout(studioPro, activeFlow, newCoordinates, kind);
 
                 } catch (error: any) {
                     console.error("Format extension failed:", error);
-                    messageBoxApi.show("error", `Failed to format ${kind}.`, error.message || String(error));
+                    messageBoxApi.show("error", "Failed to format.", error.message || String(error));
                 }
             }
         });
